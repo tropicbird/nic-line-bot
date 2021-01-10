@@ -1,0 +1,13 @@
+{
+  "version": "2.0",
+  "app_name": "nic-line-bot",
+  "stages": {
+    "dev": {
+      "api_gateway_stage": "api",
+      "environment_variables": {
+      "LINE_CHANNEL_SECRET": "4a6f7c754db6a9712bd4398bd0e88a19",
+      "LINE_CHANNEL_ACCESS_TOKEN": "608TQDxM9plt4L+MdVlaX5rzbZ3NKr/at2rjcMmsYrBuoZF7kJsIF60rw08zblVf8xXTmU6r2z8D/RuZ8IGejYgmfTCVv3Gh3yjCvRoug3UP8gudulJ6Bc62Oz9zWKX6znPXAPxntg2Llw8+r2O1XQdB04t89/1O/w1cDnyilFU="
+      }
+    }
+  }
+}

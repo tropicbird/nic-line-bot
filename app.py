@@ -1,4 +1,4 @@
-#!/usr/bin/python 
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 import os
@@ -11,32 +11,20 @@ from chalice import BadRequestError
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage,ImageMessage
+print('!!a!!')
 
-#---------original
-# import pandas as pd
-#
-# from chalicelib.character import character
-# df = pd.read_csv(f"chalicelib/{character}_other_fixed.csv")
-# df_nage = pd.read_csv(f"chalicelib/{character}_nage_fixed.csv")
-#
-# comment = "入力に誤りがあります。\n" \
-#       "ID番号 or コマンド or 技名を入力してください。\n" \
-#       "(例：121 or LPRP or 風神拳）\n" \
-#       "\n" \
-#       "「一覧」と入力するとID番号が確認できます。\n" \
-#       "\n" \
-#       "※表記ルール\n" \
-#       "右手：RP、左手：LP、右足：RK、左足：LK、" \
-#       "両手：WP、両足：WK、右手と右足：WR、右手と右足：WL、" \
-#       "右手と左足：RPK、左手と右足：LPK\n" \
-#       "↙：1、↓：2、↘：3、←：4、→：6、↖：7、↑：8、↗：9\n" \
-#       "長押し：'、ニュートラル：☆、スライド入力：【】"
-#---------original
+from PIL import Image
+from io import BytesIO
+import boto3
+
+print('!!b!!')
 
 logger = logging.getLogger()
 app = Chalice(app_name='line-api')
 handler = WebhookHandler(os.environ.get('LINE_CHANNEL_SECRET'))
 linebot = LineBotApi(os.environ.get('LINE_CHANNEL_ACCESS_TOKEN'))
+
+print('!!c!!')
 
 @app.route('/callback', methods=['POST'])
 def callback():
@@ -69,21 +57,116 @@ def _valid_reply_token(event):
 @handler.add(MessageEvent, message=TextMessage)
 def reply_for_text_message(event):
     ''' テキストメッセージを受け取った場合の応答 '''
+    print('!!d!!')
     if not _valid_reply_token(event):
         return
-
+    print('!!e!!')
     ans = "画像を送信してね。"
+    print('!!f!!')
     reply_message(event, TextSendMessage(text=ans))
+    print('!!g!!')
 
 @handler.add(MessageEvent, message=ImageMessage)
 def handle_image(event):
+    print('!!h!!')
     print("handle_image:", event)
 
     try:
-        reply_message(event, TextSendMessage(text='OKです。'))
+        print('!!i!!')
+        s3 = boto3.client('s3', region_name='ap-northeast-1')
+        print('!!j!!')
+        bucket = 's3-nic-line-bot'
+        key_dec = 'rnn-decoder-5.pt'
+        key_enc = 'rnn-encoder-5.pt'
+        print('!!k!!')
+        response_dec = s3.get_object(Bucket=bucket, Key=key_dec)
+        print('!!l!!')
+        response_enc = s3.get_object(Bucket=bucket, Key=key_enc)
+        print('!!m!!')
+        content_dec = response_dec['Body']
+        print('!!n!!')
+        content_enc = response_enc['Body']
+        print('!!o!!')
+        print(content_dec)
+        #print(content_dec.read())
+        rnn_decoder_5_pt = content_dec.read()
+        print('!!p!!')
+        print(content_enc)
+        #print(content_enc.read())
+        rnn_encoder_5_pt = content_enc.read()
+        print('!!q!!')
+        message_id = event.message.id
+        print('!!r!!')
+        message_content = linebot.get_message_content(message_id)
+        print('!!s!!')
+        image = BytesIO(message_content.content)
+        print('!!t!!')
+        im = Image.open(image)
+        print('!!u!!')
+        #ans=im.width
+
+        from chalicelib.param import embed_size,hidden_size,num_layers,drive_path
+        from chalicelib.new_class import EncoderCNN, DecoderRNN, Vocabulary
+        from chalicelib.func import load_obj
+        print('!!v!!')
+        from torchvision import transforms
+        print('!!w!!')
+        import torch
+        import torch.nn as nn
+        import torchvision.models as models
+        from torch.nn.utils.rnn import pack_padded_sequence
+
+        data_transform = transforms.Compose([
+            transforms.Resize(224),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize((0.485, 0.456, 0.406),  # Using ImageNet norms
+                                 (0.229, 0.224,
+                                  0.225))])  # https://stackoverflow.com/questions/58151507/why-pytorch-officially-use-mean-0-485-0-456-0-406-and-std-0-229-0-224-0-2
+
+        vocab = load_obj('vocab')
+        # RNN models loading
+        # rnn_decoder_5 = 'rnn-decoder-5.pt'
+        # rnn_encoder_5 = 'rnn-encoder-5.pt'
+
+        encoder = EncoderCNN(embed_size)
+        decoder = DecoderRNN(embed_size, hidden_size, len(vocab), num_layers)
+        encoder.load_state_dict(torch.load(rnn_encoder_5_pt, map_location=torch.device('cpu')))
+        decoder.load_state_dict(torch.load(rnn_decoder_5_pt, map_location=torch.device('cpu')))
+
+        # encoder.load_state_dict(torch.load(drive_path + rnn_encoder_5, map_location=torch.device('cpu')))
+        # decoder.load_state_dict(torch.load(drive_path + rnn_decoder_5, map_location=torch.device('cpu')))
+        rnn_model_5 = [encoder, decoder]
+
+        # FOR RNN
+        encoder, decoder = rnn_model_5
+        encoder.eval()
+        with torch.no_grad():
+            image = data_transform(im)
+            # image=image.to(device)
+            image = image.unsqueeze_(0)
+            features = encoder(image)
+            sampled_ids = decoder.sample(features)
+            sampled_ids = sampled_ids[0].cpu().numpy()
+
+            # Convert word_ids to words
+            sampled_caption = []
+            for word_id in sampled_ids:
+                word = vocab.idx2word[word_id]
+                sampled_caption.append(word)
+                if word == '<end>':
+                    break
+            sampled_caption = sampled_caption[1:-1]
+            sentence = ' '.join(sampled_caption)
+            sentence = sentence + '.'
+            ans = sentence.capitalize()
+
+        reply_message(event, TextSendMessage(text=ans))
+
+        # reply_message(event, TextSendMessage(text='OKです。'))
 
     except Exception as e:
-        reply_message(event, TextSendMessage(text='エラーが発生しました'))
+        reply_message(event, TextSendMessage(text=f'エラーが発生しました:{e}'))
 
 def reply_message(event, messages):
     linebot.reply_message(

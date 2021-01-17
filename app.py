@@ -89,11 +89,11 @@ def handle_image(event):
         print('!!o!!')
         print(content_dec)
         #print(content_dec.read())
-        rnn_decoder_5_pt = content_dec.read()
+        rnn_decoder_5_pt = BytesIO(content_dec.read())
         print('!!p!!')
         print(content_enc)
         #print(content_enc.read())
-        rnn_encoder_5_pt = content_enc.read()
+        rnn_encoder_5_pt = BytesIO(content_enc.read())
         print('!!q!!')
         message_id = event.message.id
         print('!!r!!')
@@ -103,18 +103,20 @@ def handle_image(event):
         print('!!t!!')
         im = Image.open(image)
         print('!!u!!')
-        #ans=im.width
 
         from chalicelib.param import embed_size,hidden_size,num_layers,drive_path
-        from chalicelib.new_class import EncoderCNN, DecoderRNN, Vocabulary
-        from chalicelib.func import load_obj
         print('!!v!!')
-        from torchvision import transforms
+        from chalicelib.new_class import EncoderCNN, DecoderRNN, Vocabulary
         print('!!w!!')
+        from chalicelib.func import load_obj
+        print('!!x!!')
+        from torchvision import transforms
+        print('!!y!!')
         import torch
         import torch.nn as nn
         import torchvision.models as models
         from torch.nn.utils.rnn import pack_padded_sequence
+        print('!!z!!')
 
         data_transform = transforms.Compose([
             transforms.Resize(224),
@@ -124,19 +126,34 @@ def handle_image(event):
                                  (0.229, 0.224,
                                   0.225))])  # https://stackoverflow.com/questions/58151507/why-pytorch-officially-use-mean-0-485-0-456-0-406-and-std-0-229-0-224-0-2
 
-        vocab = load_obj('vocab')
+        print('!!aa!!')
+
+        list_vocab = load_obj('list_vocab')
+        vocab = Vocabulary()
+
+        # Add the token words first
+        for i in list_vocab:
+            vocab.add_word(i)
+        #vocab = load_obj('vocab')
         # RNN models loading
         # rnn_decoder_5 = 'rnn-decoder-5.pt'
         # rnn_encoder_5 = 'rnn-encoder-5.pt'
 
+        print('!!ab!!')
+
         encoder = EncoderCNN(embed_size)
+        print('!!ac!!')
         decoder = DecoderRNN(embed_size, hidden_size, len(vocab), num_layers)
+        print('!!ad!!')
         encoder.load_state_dict(torch.load(rnn_encoder_5_pt, map_location=torch.device('cpu')))
+        print('!!ae!!')
         decoder.load_state_dict(torch.load(rnn_decoder_5_pt, map_location=torch.device('cpu')))
+        print('!!af!!')
 
         # encoder.load_state_dict(torch.load(drive_path + rnn_encoder_5, map_location=torch.device('cpu')))
         # decoder.load_state_dict(torch.load(drive_path + rnn_decoder_5, map_location=torch.device('cpu')))
         rnn_model_5 = [encoder, decoder]
+        print('!!ag!!')
 
         # FOR RNN
         encoder, decoder = rnn_model_5

@@ -6,10 +6,11 @@
       "api_gateway_stage": "api",
       "subnet_ids": ["subnet-7cab1c57","subnet-a3cb67eb","subnet-ae4957f5"],
       "security_group_ids": ["sg-057759159e70e03f6","sg-3fe89f70"],
-      "lambda_memory_size": 1024,
+      "lambda_memory_size": 4096,
       "environment_variables": {
       "LINE_CHANNEL_SECRET": "4a6f7c754db6a9712bd4398bd0e88a19",
-      "LINE_CHANNEL_ACCESS_TOKEN": "608TQDxM9plt4L+MdVlaX5rzbZ3NKr/at2rjcMmsYrBuoZF7kJsIF60rw08zblVf8xXTmU6r2z8D/RuZ8IGejYgmfTCVv3Gh3yjCvRoug3UP8gudulJ6Bc62Oz9zWKX6znPXAPxntg2Llw8+r2O1XQdB04t89/1O/w1cDnyilFU="
+      "LINE_CHANNEL_ACCESS_TOKEN": "608TQDxM9plt4L+MdVlaX5rzbZ3NKr/at2rjcMmsYrBuoZF7kJsIF60rw08zblVf8xXTmU6r2z8D/RuZ8IGejYgmfTCVv3Gh3yjCvRoug3UP8gudulJ6Bc62Oz9zWKX6znPXAPxntg2Llw8+r2O1XQdB04t89/1O/w1cDnyilFU=",
+        "PYTHONPATH": "/mnt/efs/lib"
       }
     }
   }

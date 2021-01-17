@@ -23,20 +23,42 @@ class Vocabulary(object):
     def __len__(self):
         return len(self.word2idx)
 
-#import sys
-#sys.path.append("/mnt/lambda")
+# import sys
+# #sys.path.append("/mnt/lambda")
+# sys.path.append("/mnt/efs/lib")
 
+import sys
+import pkg_resources
+
+print(f'現在のpythonのバージョン：{sys.version}')
+
+print(f'現在のpythonの場所：{sys.executable}')
+
+installed_packages = pkg_resources.working_set
+installed_packages_list = sorted(["%s==%s" % (i.key, i.version)
+   for i in installed_packages])
+print(f'現在のpythonにインストールされているパッケージ一覧：{installed_packages_list}')
+
+print(0)
+import numpy
+print(numpy.__version__)
+print(0.1)
 import torch
+print(1)
+print(torch.__version__)
 import torch.nn as nn
+print(2)
 import torchvision.models as models
+print(3)
 from torch.nn.utils.rnn import pack_padded_sequence
+print(4)
 
 
 class EncoderCNN(nn.Module):
     def __init__(self, embed_size):
         """Load the pretrained ResNet-152 and replace top fc layer."""
         super(EncoderCNN, self).__init__()
-        resnet = models.resnet152(pretrained=True)  # Pre-trained on ImageNet by default
+        resnet = models.resnet152(pretrained=False)  # Pre-trained on ImageNet by default
         layers = list(resnet.children())[:-1]  # Keep all layers except the last one
         # Unpack the layers and create a new Sequential
         self.resnet = nn.Sequential(*layers)

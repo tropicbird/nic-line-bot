@@ -4,6 +4,8 @@
 
 実装にはAWS Lambdaを使ったのですが、たくさん落とし穴がありました。詳細は整理して後日書きます。
 
+メモ：2020.1.21. AWSでNATゲートウェイを使っていたら料金が高かったので、NATインスタンスに変更した。
+
 ![qrcode](https://user-images.githubusercontent.com/34531271/104846093-259dff80-591c-11eb-8083-f17e141653b4.png)
 
 
